@@ -1,0 +1,32 @@
+# F1 Race Winner & Podium Prediction System
+# Python 3.10+
+#
+# Install:   pip install -r requirements.txt
+
+# --- Core data and ML ---------------------------------------------------------
+pandas>=2.2,<4
+numpy>=1.26,<3
+scikit-learn>=1.4,<2
+xgboost>=2.0,<4
+pyarrow>=14
+
+# --- Data sources -------------------------------------------------------------
+requests>=2.31
+PyYAML>=6.0
+fastf1>=3.4
+
+# --- Analysis and plotting ----------------------------------------------------
+matplotlib>=3.8
+
+# --- Testing and code quality -------------------------------------------------
+pytest>=8.0
+ruff>=0.5
+black>=24.0
+
+# --- Later phases (uncomment when you reach them) -----------------------------
+# shap>=0.45
+# mlflow>=2.10
+# pandera>=0.19
+# fastapi>=0.110
+# uvicorn>=0.29
+# pydantic>=2.6

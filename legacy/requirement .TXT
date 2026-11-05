@@ -1,0 +1,34 @@
+# F1 Race Winner & Podium Prediction System
+# Python 3.10+ (code developed and tested on Python 3.12)
+#
+# Install:   pip install -r requirements.txt
+# Tested on: pandas 3.0, numpy 2.4, scikit-learn 1.8, xgboost 3.4 (lower bounds below are minimums)
+
+# --- Core data and ML ---------------------------------------------------------
+pandas>=2.2,<4          # groupby(include_groups=...) used in the EDA script needs >= 2.2
+numpy>=1.26,<3
+scikit-learn>=1.4,<2    # logistic regression, random forest, MLP meta-layer, metrics
+xgboost>=2.0,<4
+pyarrow>=14             # Parquet files for the raw / clean / features layers
+
+# --- Data sources -------------------------------------------------------------
+requests>=2.31          # Jolpica-F1 API
+PyYAML>=6.0              # YAML backtest configuration
+fastf1>=3.4             # practice, lap, tyre and weather data (2018 onward)
+
+# --- Analysis and plotting ----------------------------------------------------
+matplotlib>=3.8         # EDA script
+
+# --- Testing and code quality -------------------------------------------------
+pytest>=8.0             # leakage tests, OOF tests, AdaptiveStack tests
+ruff>=0.5               # linting
+black>=24.0             # formatting
+
+
+# --- Later phases (uncomment when you reach them) -----------------------------
+# shap>=0.45            # model explanations (SRS FR-64)
+# mlflow>=2.10          # experiment tracking and model registry (FR-65, FR-66)
+# pandera>=0.19         # schema validation of downloaded data (FR-5)
+# fastapi>=0.110        # prediction API (FR-68)
+# uvicorn>=0.29         # serves the FastAPI app
+# pydantic>=2.6         # typed API inputs and outputs (FR-69)

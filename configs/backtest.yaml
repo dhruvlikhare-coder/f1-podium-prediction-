@@ -1,0 +1,59 @@
+data:
+  features_path: data/features/features.parquet
+  metrics_path: data/backtest/metrics.csv
+  predictions_path: data/backtest/predictions.csv
+  experiments_path: data/backtest/experiments.csv
+
+split:
+  train_start: 2014
+  train_end: 2022
+  validation_season: 2023
+  test_seasons: [2024, 2025]
+
+model:
+  target: is_podium
+  min_train_seasons: 3
+  methods:
+    - base_0_LogisticRegression
+    - base_1_RandomForestClassifier
+    - base_2_XGBClassifier
+    - soft
+    - stack_lr
+    - mlp_static
+    - mlp_adaptive
+  feature_columns:
+    - grid_clean
+    - pit_lane_start
+    - driver_avg_finish
+    - driver_podium_rate
+    - driver_dnf_rate
+    - driver_experience
+    - team_avg_finish
+    - team_podium_rate
+    - team_mech_dnf_rate
+    - circuit_avg_finish
+    - circuit_races
+    - era
+  context_columns: []
+  random_seeds: [42, 7, 21]
+  replay_window: 40
+  learning_rate: 0.0001
+  update_epochs: 3
+  hidden: [16]
+  mlp_alpha: 0.0001
+  mlp_max_iter: 800
+  calibration_bins: 10
+  logistic_regression:
+    max_iter: 1000
+    C: 0.5
+  random_forest:
+    n_estimators: 100
+    max_depth: 5
+    n_jobs: -1
+  xgboost:
+    n_estimators: 100
+    max_depth: 3
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    n_jobs: -1
