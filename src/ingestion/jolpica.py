@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-BASE_URL = "https://api.jolpi.ca/ergast/f1"
+BASE_URL = "https://api.jolpi.ca/ergast/f1" 
 PAGE_SIZE = 100
 ROOT = Path(__file__).resolve().parent.parent.parent
 

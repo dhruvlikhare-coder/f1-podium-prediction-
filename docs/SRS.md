@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Version** | 1.1 (Draft) |
-| **Date** | 3 October 2026 |
+| **Version** | 1.2 (Draft) |
+| **Date** | 6 November 2026 |
 | **Project type** | Machine learning / MLOps (portfolio and industry-level system) |
 | **Status** | Planning |
 
@@ -23,10 +23,11 @@ The system will:
 - train and compare single models, ensembles, a stacking ensemble, and an optional adaptive neural layer,
 - evaluate a pairwise ranking formulation as an alternative to per-driver classification,
 - run controlled synthetic-data experiments and a Monte Carlo race simulator,
+- provide a separate car-health status prototype based on available telemetry, clearly distinguishing synthetic signals from verified real data,
 - track experiments, serve predictions through an API and dashboard, and monitor live performance,
 - be containerized, tested, and automated through CI/CD.
 
-The system will **not** use proprietary team data (for example engine temperatures or internal telemetry), place bets, or provide real-time in-race predictions in this version.
+The system will **not** use proprietary team data (for example engine temperatures or internal telemetry), place bets, or provide real-time in-race podium predictions in this version. The car-health prototype is a separate monitoring output: synthetic telemetry may be used for development and demonstration, but it must not be presented as real F1 engine data or as a confirmed mechanical diagnosis. Health or reliability information may affect podium predictions only when it is publicly sourced, available before the race being predicted, and validated in a separate backtest.
 
 ### 1.3 Definitions and Abbreviations
 | Term | Meaning |
@@ -41,6 +42,8 @@ The system will **not** use proprietary team data (for example engine temperatur
 | Stacking | Ensemble where a meta-model learns to combine base-model predictions |
 | OOF | Out-of-fold prediction (made on data a model was not trained on) |
 | Pairwise ranking | Predicting whether driver A finishes ahead of driver B |
+| Car-health status | A data-supported indicator of observed telemetry anomalies; it is not a mechanical diagnosis |
+| Synthetic telemetry | Simulated sensor readings and injected patterns, not measurements from a real car |
 | Concept drift | Change in data patterns over time, such as after regulation changes |
 | Ablation | Experiment removing one component to measure its contribution |
 | MLOps | Practices for deploying, tracking, and monitoring ML systems |
@@ -69,9 +72,10 @@ A Python-based ML system consisting of a data pipeline, a modeling and evaluatio
 5. Pairwise ranking experiments
 6. Synthetic-data experiments and Monte Carlo race simulation
 7. Neural meta-layer with adaptive (race-by-race) updating
-8. Experiment tracking and model registry
-9. Prediction API and dashboard
-10. CI/CD, scheduled refresh, and live monitoring
+8. Separate telemetry-based car-health status prototype
+9. Experiment tracking and model registry
+10. Prediction API and dashboard
+11. CI/CD, scheduled refresh, and live monitoring
 
 ### 2.3 Development Phases
 Each phase must produce a usable result, so the project remains complete if stopped after any phase. Complexity is added only when it measurably improves results in the backtest.
@@ -80,7 +84,7 @@ Each phase must produce a usable result, so the project remains complete if stop
 |---|---|---|
 | 1 | Data pipeline, leak-free features, backtest harness, baseline | Clean dataset, baseline results |
 | 2 | Single models, soft voting, stacking with time-ordered OOF folds | Model comparison table |
-| 3 | Pairwise ranking and synthetic-data experiments (with Monte Carlo simulator) | Experiment report with ablations |
+| 3 | Pairwise ranking, synthetic-data experiments, Monte Carlo simulator, and a separate synthetic telemetry-health prototype | Experiment report with ablations and a clearly labeled health-status demo |
 | 4 | Neural meta-layer and adaptive updates | Ablation: does adaptation help? |
 | 5 | FastAPI service, dashboard, Docker | Working demo |
 | 6 | CI/CD, scheduled refresh, monitoring | Live, self-tracking system |
@@ -253,6 +257,18 @@ Recommended priority if time is limited: Phase 1 → 2 → 5 → 6 → 3 → 4 �
 | FR-75 | The system shall monitor feature distributions for drift and flag significant changes. |
 | FR-76 | The system shall raise a visible alert when live performance or drift crosses configured thresholds. |
 
+#### 3.1.15 Car Health Status
+| ID | Requirement |
+|---|---|
+| FR-77 | The system shall provide car-health status as a separate output from pre-race podium and win predictions. |
+| FR-78 | The health monitor shall accept time-stamped telemetry samples or telemetry windows associated with an identifiable run/session and car or driver where that information is available. |
+| FR-79 | The health monitor shall report a status of `normal`, `warning`, `critical`, or `unknown`, together with the observed anomaly type, severity or score, and the supporting sensor/window evidence where available. Status thresholds shall be configurable and documented. |
+| FR-80 | Missing, stale, invalid, or insufficient telemetry shall produce an `unknown` status (or a clear data-quality warning), never an inferred `normal` status. |
+| FR-81 | Synthetic telemetry and injected anomaly labels shall be visibly identified as synthetic in stored data and user-facing outputs. Synthetic health results shall not be represented as measurements or diagnoses of real F1 cars. |
+| FR-82 | The health monitor shall support testing with the synthetic telemetry generator; performance shall be reported by anomaly type and at run/session level using held-out runs. |
+| FR-83 | Health status and in-race telemetry shall not be used as inputs to a pre-race podium or win prediction. A reliability feature may be added to that model only when its source is public and its value is available before the prediction cutoff. |
+| FR-84 | Before any pre-race reliability feature is enabled, the system shall compare models with and without that feature using the same chronological real-race backtest and shall report the results and data provenance. |
+
 ### 3.2 Non-Functional Requirements
 | ID | Category | Requirement |
 |---|---|---|
@@ -268,6 +284,7 @@ Recommended priority if time is limited: Phase 1 → 2 → 5 → 6 → 3 → 4 �
 | NFR-10 | Data integrity | Chronological splitting shall be enforced in code so that test data never appears in training. |
 | NFR-11 | Transparency | Synthetic data, limitations, and negative results shall be clearly documented. |
 | NFR-12 | Observability | The service shall produce structured logs for ingestion, training, and prediction. |
+| NFR-13 | Transparency | Car-health outputs shall distinguish observed data from synthetic data, expose data freshness/quality, and state that anomaly status is not a confirmed mechanical diagnosis. |
 
 ### 3.3 External Interface Requirements
 - **Software interfaces:** HTTP requests to Jolpica-F1; FastF1 library calls; MLflow tracking; REST API exposed by the system.
@@ -293,6 +310,8 @@ Recommended priority if time is limited: Phase 1 → 2 → 5 → 6 → 3 → 4 �
 
 Suggested project structure: `data/`, `src/ingestion/`, `src/features/`, `src/models/`, `src/ranking/`, `src/synthetic/`, `src/simulation/`, `src/neural/`, `src/evaluation/`, `src/serving/`, `app/`, `configs/`, `notebooks/`, `tests/`, `docker/`.
 
+The telemetry-health monitor is a separate path from the pre-race prediction model. It may consume public telemetry when available or synthetic telemetry for a labeled prototype; it must not imply access to confidential power-unit sensors.
+
 ---
 
 ## 5. Data Requirements
@@ -300,6 +319,7 @@ Suggested project structure: `data/`, `src/ingestion/`, `src/features/`, `src/mo
 ### 5.1 Units of Observation
 - **Classification:** one row per driver per race.
 - **Pairwise ranking:** one row per ordered driver pair per race (about 190 unordered pairs for 20 drivers).
+- **Telemetry health:** one row per telemetry sample or time window per run/session and car/driver, where identifiers are available; health records are separate from the driver-race prediction table.
 
 ### 5.2 Targets
 - `is_podium` (binary), `is_winner` (binary, highly imbalanced; use class weights, calibration, or ranking formulations).
@@ -320,10 +340,18 @@ Seasons may be adjusted, but splits must always be chronological and identical a
 - Flagged with an `is_synthetic` column and excluded from rolling-form features.
 - Reported separately in every results table.
 
-### 5.5 Data Quality Rules
+### 5.5 Telemetry and Health Data Policy
+- Telemetry sources, units, sampling frequency, time coverage, and any transformations shall be recorded where known.
+- The synthetic power-unit telemetry dataset is for software development and controlled anomaly-detection experiments only; its sensor values and injected faults are assumptions, not real-car measurements.
+- Telemetry-health evaluation shall split by run/session (not by individual windows) to prevent samples from the same run leaking across splits.
+- Synthetic telemetry shall not be mixed into real-race validation/test data or used to claim real-world engine-health performance.
+- Any reliability input to podium prediction shall be derived only from public information available before the race cutoff and shall have documented provenance.
+
+### 5.6 Data Quality Rules
 - Remove or flag races with missing results.
 - Treat disqualifications and non-starts consistently.
 - Document every imputation rule.
+- Validate telemetry timestamps, units, sensor values, and run/session identity; flag duplicate, out-of-order, or missing samples and report coverage.
 
 ---
 
@@ -343,6 +371,9 @@ Seasons may be adjusted, but splits must always be chronological and identical a
 | AC-10 | The API and dashboard shall run from a Docker container, and CI shall pass (tests, linting). |
 | AC-11 | At least one live race shall have predictions logged before the race and compared with the actual result. |
 | AC-12 | Documentation shall include setup instructions, data description, architecture diagram, results summary, model card, and limitations. |
+| AC-13 | The health monitor shall return `unknown` for missing or insufficient telemetry and shall identify synthetic input in its outputs. |
+| AC-14 | The synthetic telemetry-health prototype shall be evaluated on held-out runs, with results reported separately by anomaly type and without claiming real-car diagnostic accuracy. |
+| AC-15 | No health or telemetry feature shall enter pre-race podium predictions unless its pre-race availability is verified and the with/without-feature real-race ablation is reported. |
 
 ---
 
@@ -359,6 +390,7 @@ Seasons may be adjusted, but splits must always be chronological and identical a
 | Predictability ceiling (crashes, safety cars, weather, strategy luck) | Accuracy cannot be very high | Report probabilities, calibration, and log loss, not only accuracy |
 | Class imbalance and linked outcomes within a race | Wrong number of predicted podiums | Within-race normalization, ranking formulations, class weights |
 | Missing data (FastF1 starts in 2018) and name inconsistencies | Gaps in features | Imputation rules, name mapping, era-aware feature availability |
+| Synthetic or sparse telemetry mistaken for actual engine health | Misleading status or unsupported diagnostic claims | Label synthetic data, expose coverage and freshness, use `unknown` when evidence is insufficient, and describe outputs as anomaly indicators rather than diagnoses |
 | API or library changes | Pipeline breaks | Caching, pinned versions, schema validation |
 | Project scope too large | Unfinished system | Phased plan; each phase is independently complete |
 | Evaluation traps (single-season results, tuning on test data, weak baselines) | False conclusions | Fixed test seasons, walk-forward backtest, strong baseline, logged experiments |
@@ -367,6 +399,7 @@ Seasons may be adjusted, but splits must always be chronological and identical a
 
 ## 8. Future Enhancements
 - Live in-race prediction using lap-by-lap data
+- Car-health monitoring using suitable public telemetry, after the synthetic prototype and data-availability review
 - Tyre degradation and pit strategy modules
 - Driver-versus-car performance separation
 - Multi-task learning (finishing position, podium, and points jointly)
@@ -380,7 +413,7 @@ Seasons may be adjusted, but splits must always be chronological and identical a
 | Priority | Requirements |
 |---|---|
 | Must have | FR-1 to FR-33 (data, features, backtest, baseline, ensembles, stacking), FR-56 to FR-58, FR-60 to FR-62, FR-64 to FR-69, NFR-1 to NFR-10 |
-| Should have | FR-34 to FR-48 (pairwise ranking, synthetic experiments, Monte Carlo), FR-59, FR-63, FR-70 to FR-76 |
+| Should have | FR-34 to FR-48 (pairwise ranking, synthetic experiments, Monte Carlo), FR-59, FR-63, FR-70 to FR-84 (including car-health status), NFR-13 |
 | Could have | FR-49 to FR-55 (neural layer and adaptive learning), sequence model (FR-51) |
 
 ## Appendix B: Change Log
@@ -389,3 +422,4 @@ Seasons may be adjusted, but splits must always be chronological and identical a
 |---|---|
 | 1.0 | Initial SRS: data pipeline, baseline, single models, prediction, evaluation, optional dashboard |
 | 1.1 | Added stacking with time-ordered OOF folds, pairwise ranking, synthetic-data and Monte Carlo experiments, neural meta-layer with adaptive updates, backtesting framework, experiment tracking, API, CI/CD, monitoring, phased plan, expanded risks and acceptance criteria |
+| 1.2 | Added a separate telemetry-based car-health status prototype, synthetic telemetry safeguards, data-quality requirements, and criteria for any future pre-race reliability feature |

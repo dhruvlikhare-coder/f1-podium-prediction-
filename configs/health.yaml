@@ -1,0 +1,53 @@
+# Car-health anomaly indicator: procedure choices.
+#
+# These were chosen BEFORE any evaluation. The alert thresholds themselves are
+# NOT set here: they are fitted from validation runs (src/health/thresholds.py)
+# and frozen to a hash-checked JSON file before the test split is touched.
+#
+# This is an anomaly indicator over SYNTHETIC telemetry, not an engine diagnosis.
+# Sensor values and injected faults are simulated assumptions (SRS FR-77..84).
+
+# Matches the window table produced by SynthetIc/synthetic_telemetry.py.
+columns:
+  run: run_id
+  timestamp: time_s             # numeric seconds at the start of each window
+  synthetic: is_synthetic       # required; the monitor never guesses provenance
+
+# Engineered features available in the synthetic generator's window table.
+features:
+  - coolant_minus_ambient
+  - oil_pressure_mean
+  - vibration_mean
+
+# Plausibility bounds. A value outside is INVALID data (sensor glitch), never
+# an anomaly. Keep these wide; they are not alert thresholds.
+sensor_ranges:
+  coolant_minus_ambient: [0, 200]
+  oil_pressure_mean: [0, 10]
+  vibration_mean: [0, 10]
+
+# Optional label for the observed pattern (descriptive, not a fault diagnosis).
+feature_groups:
+  coolant_minus_ambient: thermal
+  oil_pressure_mean: pressure
+  vibration_mean: vibration
+
+data_quality:
+  window_step_s: 10.0    # matches the generator's default 10 s windows
+  max_gap_s: null        # null -> 1.5 * window_step_s
+  max_age_s: 10.0        # live use only: older than this at `as_of` -> unknown
+  min_valid_windows: 5   # fewer valid windows than this -> unknown
+  min_coverage: 0.8      # valid windows / expected windows below this -> unknown
+
+# Run-level aggregation. "Consecutive" means adjacent in time and both valid.
+run_status:
+  warning_min_consecutive: 2    # windows >= warning threshold in a row -> warning
+  critical_min_consecutive: 3   # windows >= critical threshold in a row -> critical
+  max_evidence: 3               # top-scoring windows listed as evidence
+
+# Threshold calibration on NORMAL VALIDATION runs only.
+calibration:
+  warning_quantile: 0.99        # warning  = 99th percentile of normal window scores
+  critical_quantile: 0.999      # critical = 99.9th percentile ...
+  min_critical_margin: 0.5      # ... but at least warning + 0.5 score units
+  min_windows: 100              # refuse to calibrate on fewer windows

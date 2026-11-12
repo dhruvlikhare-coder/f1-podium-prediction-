@@ -3,9 +3,12 @@ Interactive F1 Podium Predictor — takes user input and returns predictions.
 
 Usage
 -----
-    python -m src.prediction.predict                        # interactive mode (prompts for input)
-    python -m src.prediction.predict --demo                 # run a quick demo with synthetic data
-    python -m src.prediction.predict --file race_input.csv  # batch mode from a CSV file
+    python -m src.prediction.predict                          # interactive mode (prompts for input)
+    python -m src.prediction.predict --demo                   # run a quick demo with synthetic data
+    python -m src.prediction.predict --file race_input.csv    # batch mode from a CSV file
+    python -m src.prediction.predict --health                 # interactive engine health check
+    python -m src.prediction.predict --car 3                  # check power unit 3 from telemetry
+    python -m src.prediction.predict --health-file t.csv      # batch health check from CSV
 
 The script trains the AdaptiveStack ensemble on the historical feature table
 (data/features/features.parquet) and then lets the user enter race details to
@@ -418,7 +421,25 @@ def main() -> None:
         choices=["soft", "stack_lr", "mlp_static", "mlp_adaptive"],
         help="Primary ensemble method for ranking (default: mlp_adaptive).",
     )
+    parser.add_argument(
+        "--health", action="store_true",
+        help="Interactive car engine health check (enter sensor readings).",
+    )
+    parser.add_argument(
+        "--car", type=str, default=None,
+        help="Check a specific car/unit by run_id or unit_id from stored telemetry.",
+    )
+    parser.add_argument(
+        "--health-file", type=str, default=None, dest="health_file",
+        help="CSV file with telemetry windows for engine health check.",
+    )
     args = parser.parse_args()
+
+    # Engine health check mode (--health, --car, --health-file)
+    if args.health or args.car or getattr(args, "health_file", None):
+        from src.health.check_health import run_health_check
+        run_health_check(args, ROOT)
+        return
 
     # Demo mode
     if args.demo:
