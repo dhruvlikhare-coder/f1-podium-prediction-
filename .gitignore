@@ -36,3 +36,8 @@ Thumbs.db
 
 # FastF1 cache
 data/f1_cache/
+
+# Node / Frontend
+node_modules/
+web/node_modules/
+web/dist/

@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #050608;
+  color: #f1f3f9;
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+/* Glassmorphism Panels */
+.glass-panel {
+  background: rgba(13, 15, 23, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-glow {
+  background: rgba(13, 15, 23, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(225, 6, 0, 0.4);
+  box-shadow: 0 0 40px rgba(225, 6, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* F1 Car High-Speed Racing Motion Animation (Left-Right Surging) */
+@keyframes car-racing-motion {
+  0% {
+    transform: translateX(-40px) translateY(0px) scale(0.99);
+    filter: drop-shadow(0 0 15px rgba(0, 245, 212, 0.4));
+  }
+  20% {
+    transform: translateX(10px) translateY(-2px) scale(1.01);
+    filter: drop-shadow(-15px 0 25px rgba(0, 245, 212, 0.7));
+  }
+  50% {
+    transform: translateX(50px) translateY(1.5px) scale(1.02);
+    filter: drop-shadow(-30px 0 40px rgba(0, 245, 212, 0.9));
+  }
+  75% {
+    transform: translateX(15px) translateY(-1px) scale(1.01);
+    filter: drop-shadow(-15px 0 25px rgba(0, 245, 212, 0.6));
+  }
+  100% {
+    transform: translateX(-40px) translateY(0px) scale(0.99);
+    filter: drop-shadow(0 0 15px rgba(0, 245, 212, 0.4));
+  }
+}
+
+.animate-car-racing {
+  animation: car-racing-motion 2.0s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Speed Lines Rushing From Right to Left */
+@keyframes speed-streak {
+  0% {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-100vw);
+    opacity: 0;
+  }
+}
+
+.animate-speed-streak {
+  animation: speed-streak 0.8s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(225, 6, 0, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(225, 6, 0, 0.8);
+}
